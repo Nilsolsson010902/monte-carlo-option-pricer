@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from mc_pricer.stats import Stats
 
 class MonteCarlo:
 
@@ -23,23 +24,6 @@ class MonteCarlo:
         #Generates a random number z from a norm distribution N(0,1)
         return np.random.normal(0, 1)
     
-    @staticmethod
-    def call_option_max(ST: float, K: float) -> float:
-        """
-        Calculates call option profit.
-        ST: Current stock price
-        K: Strike price
-        """
-        return np.maximum(ST - K, 0)
-    
-    @staticmethod
-    def put_option_max(ST: float, K: float) -> float:
-        """
-        Calculates put option profit.
-        ST: Current stock price
-        K: Strike price
-        """
-        return np.maximum(K - ST, 0)
 
     @staticmethod
     def mc_discount(price: float, rf: float, T: float) -> float:
@@ -50,9 +34,28 @@ class MonteCarlo:
         T: time corresponding with future price.
         """
         return price*np.exp(-rf*T)
+    
+    @staticmethod
+    def payoff(ST: float, K: float, option_type: str) -> float:
+        if option_type == "call":
+            return np.maximum(ST - K, 0)
+        
+        elif option_type == "put":
+            return np.maximum(K - ST, 0)
+        
+        else:
+            raise Exception("Invalid option type")
 
     @staticmethod
-    def mc_simulator(n: int, S0: float, K: float, T: float, rf: float, sigma: float) -> tuple:
+    def ST_simulator(n: int, S0: float, T: float, rf: float, sigma: float) -> list:
+        st = []
+        for i in range(0, n):
+            gbm_price = MonteCarlo.gbm_simulation(S0, rf,sigma, T)
+            st.append(gbm_price)
+        return st
+
+    @staticmethod
+    def mc_simulator(n: int, S0: float, K: float, T: float, rf: float, sigma: float, option_type: str) -> tuple:
         """
         Monte Carlo simulation for calculating price of call and put option.
         n: number of simulations
@@ -61,21 +64,12 @@ class MonteCarlo:
         T: future date for stock price.
         rf: continuously compounded risk-free rate (e.g. 0.02)
         sigma: volatility (e.g. 0.2)
+        option_type: call or put
         """
-        call_options = 0
-        put_options = 0
-        for i in range(0, n):
-            gbm_price = MonteCarlo.gbm_simulation(S0, rf,sigma, T)
-            c_price = MonteCarlo.call_option_max(gbm_price, K)
-            p_price = MonteCarlo.put_option_max(gbm_price, K)
-            call_options += c_price
-            put_options += p_price
-        
-        average_c_price = call_options/n
-        average_p_price = put_options/n
-
-        discounted_c = MonteCarlo.mc_discount(average_c_price, rf,  T)
-        discounted_p = MonteCarlo.mc_discount(average_p_price, rf,  T)
-
-
-        return(discounted_c, discounted_p)
+        stock_prices = MonteCarlo.ST_simulator(n, S0, T, rf, sigma)
+        payoffs = [MonteCarlo.payoff(price, K, option_type) for price in stock_prices]
+        mean_payoff = np.mean(payoffs)
+        price = MonteCarlo.mc_discount(mean_payoff, rf, T)
+        std = MonteCarlo.mc_discount(Stats.std_from_sum(payoffs), rf, T)
+        ci = Stats.ci_normal(price, std)
+        return price, ci

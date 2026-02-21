@@ -48,4 +48,4 @@ class BlackScholes:
 
 if __name__ == "__main__":
     print(BlackScholes.black_scholes_price(100, 95, 0.25, 0.1 , 0.5, "call"))
-    print(MonteCarlo.mc_simulator(100000, 100, 95, 0.25, 0.1 , 0.5, "put"))
+    print(MonteCarlo.mc_simulator(100000, 100, 95, 0.25, 0.1 , 0.5, "call"))
