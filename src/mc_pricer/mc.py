@@ -1,42 +1,62 @@
-import math
 import numpy as np
 from mc_pricer.stats import Stats
 
 class MonteCarlo:
 
     @staticmethod
-    def gbm_simulation(S0: float, rf: float, sigma: float, T: float) -> float:
+    def terminal_price_simulation(n: int, 
+                                  S0: float, 
+                                  rf: float, 
+                                  sigma: float, 
+                                  T: float,
+                                  method: str = "plain",
+                                  seed: int| None = None
+                                  ) -> np.ndarray:
         """
-            Geometric Brownian Motion formula for stock price. 
-            Inputs:
-            S0: spot price today
-            rf: continuously compounded risk-free rate (e.g. 0.02)
-            sigma: volatility (e.g. 0.2)
-            T: future date for stock price.
+            Simulates terminal stockpices with risk neutral GBM. 
+            Parameters:
+            n: number of simulations.
+            S0: spot price.
+            rf: continuously compounded risk-free rate.
+            sigma: volatility.
+            T: future date for stock price (maturity).
+            method:"plain" or "antithetic".
+            seed: random seed for reproducibility.
+
+            Returns: Array of simulated terminal prices.
         """
-        z = MonteCarlo.generate_z()
+        if n <= 0:
+            raise ValueError("n must be > 0")
+        if S0 <= 0:
+            raise ValueError("S0 must be > 0")
+        if T < 0:
+            raise ValueError("T must be >= 0")
+        if sigma <= 0:
+            raise ValueError("sigma must be > 0")
+        
+        rand_num = np.random.default_rng(seed)
+
+        if method == "plain":
+            z = rand_num.standard_normal(n)
+
+        elif method == "antithetic":
+            half_n = (n + 1) // 2
+            z_half = rand_num.standard_normal(half_n)
+            z = np.concatenate([z_half, -z_half])[:n]
+
+        else:
+            raise ValueError("method must be 'plain' or 'antithetic'")
+        
         return  S0 * np.exp((rf - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * z)
 
-
-
-    @staticmethod
-    def generate_z() -> float:
-        #Generates a random number z from a norm distribution N(0,1)
-        return np.random.normal(0, 1)
-    
-
-    @staticmethod
-    def mc_discount(price: float, rf: float, T: float) -> float:
-        """
-        Discount model for option price
-        Price: future price
-        rf: continuously compounded risk-free rate (e.g. 0.02)
-        T: time corresponding with future price.
-        """
-        return price*np.exp(-rf*T)
     
     @staticmethod
-    def payoff(ST: float, K: float, option_type: str) -> float:
+    def payoff(ST: np.ndarray, K: float, option_type: str) -> np.ndarray:
+        """
+        Vectorized payoff for European call/put.
+        """
+        option_type = option_type.lower()
+
         if option_type == "call":
             return np.maximum(ST - K, 0)
         
@@ -46,16 +66,19 @@ class MonteCarlo:
         else:
             raise Exception("Invalid option type")
 
-    @staticmethod
-    def ST_simulator(n: int, S0: float, T: float, rf: float, sigma: float) -> list:
-        st = []
-        for i in range(0, n):
-            gbm_price = MonteCarlo.gbm_simulation(S0, rf,sigma, T)
-            st.append(gbm_price)
-        return st
 
     @staticmethod
-    def mc_simulator(n: int, S0: float, K: float, T: float, rf: float, sigma: float, option_type: str) -> tuple:
+    def price_eu_option(n: int, 
+                        S0: float, 
+                        K: float, 
+                        T: float, 
+                        rf: float, 
+                        sigma: float, 
+                        option_type: str,
+                        method: str = "plain",
+                        confidence_level: float = 0.95,
+                        seed: int | None = None,
+                        ) -> tuple[float, tuple[float, float]]:
         """
         Monte Carlo simulation for calculating price of call and put option.
         n: number of simulations
@@ -65,11 +88,27 @@ class MonteCarlo:
         rf: continuously compounded risk-free rate (e.g. 0.02)
         sigma: volatility (e.g. 0.2)
         option_type: call or put
+        method: "plain" or "antithetic" 
+        seed: random seed for reproducibility.
+
+        Returns: Monte Carlo price for European option with confidence interval.
         """
-        stock_prices = MonteCarlo.ST_simulator(n, S0, T, rf, sigma)
-        payoffs = [MonteCarlo.payoff(price, K, option_type) for price in stock_prices]
-        mean_payoff = np.mean(payoffs)
-        price = MonteCarlo.mc_discount(mean_payoff, rf, T)
-        std = MonteCarlo.mc_discount(Stats.std_from_sum(payoffs), rf, T)
-        ci = Stats.ci_normal(price, std)
+
+        ST = MonteCarlo.terminal_price_simulation(
+            n=n,
+            S0=S0,
+            T=T,
+            rf=rf,
+            sigma=sigma,
+            method=method,
+            seed=seed,
+        )
+
+
+        payoffs = MonteCarlo.payoff(ST, K, option_type)
+        discounted_payoffs = np.exp(-rf * T) * payoffs
+        price = float(np.mean(discounted_payoffs))
+        stderr = Stats.standard_error(discounted_payoffs)
+        ci = Stats.ci_normal(price, stderr, level=confidence_level)
+
         return price, ci

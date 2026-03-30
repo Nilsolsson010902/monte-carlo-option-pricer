@@ -94,7 +94,7 @@ class BlackScholes:
             if option_type.lower() == "call":
                 return 1.0 if S0 > K else 0.0
             elif option_type.lower() == "put":
-                return -1.0 if S0 < K else 0.0
+                return -1.0 if S0 < K else 0.0          #put option delta is -1.0 when ITM
             else:
                 raise ValueError("No such option type")
             
@@ -154,4 +154,3 @@ class BlackScholes:
 
 if __name__ == "__main__":
     print(BlackScholes.black_scholes_price(100, 95, 0.25, 0.1 , 0.5, "call"))
-  
