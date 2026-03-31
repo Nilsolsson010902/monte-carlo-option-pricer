@@ -2,7 +2,7 @@ import numpy as np
 import math
 import scipy.stats as st
 
-class Stats():
+class Util():
 
     @staticmethod
     def standard_error(values: np.ndarray) -> float:
@@ -26,3 +26,19 @@ class Stats():
         upper = mean + z_score*std
         lower = mean - z_score*std
         return (lower, upper)
+    
+    @staticmethod
+    def payoff(ST,  K: float, option_type: str):
+        """
+        payoff for call/put.
+        """
+        option_type = option_type.lower()
+
+        if option_type == "call":
+            return np.maximum(ST - K, 0)
+        
+        elif option_type == "put":
+            return np.maximum(K - ST, 0)
+        
+        else:
+            raise Exception("Invalid option type")

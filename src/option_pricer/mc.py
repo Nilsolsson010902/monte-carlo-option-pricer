@@ -1,7 +1,8 @@
 import numpy as np
-from mc_pricer.stats import Stats
+from option_pricer.util import Util
 
-class MonteCarlo:
+
+class MonteCarlo():
 
     @staticmethod
     def terminal_price_simulation(n: int, 
@@ -49,23 +50,6 @@ class MonteCarlo:
         
         return  S0 * np.exp((rf - 0.5 * sigma**2) * T + sigma * np.sqrt(T) * z)
 
-    
-    @staticmethod
-    def payoff(ST: np.ndarray, K: float, option_type: str) -> np.ndarray:
-        """
-        Vectorized payoff for European call/put.
-        """
-        option_type = option_type.lower()
-
-        if option_type == "call":
-            return np.maximum(ST - K, 0)
-        
-        elif option_type == "put":
-            return np.maximum(K - ST, 0)
-        
-        else:
-            raise Exception("Invalid option type")
-
 
     @staticmethod
     def price_eu_option(n: int, 
@@ -94,21 +78,10 @@ class MonteCarlo:
         Returns: Monte Carlo price for European option with confidence interval.
         """
 
-        ST = MonteCarlo.terminal_price_simulation(
-            n=n,
-            S0=S0,
-            T=T,
-            rf=rf,
-            sigma=sigma,
-            method=method,
-            seed=seed,
-        )
-
-
-        payoffs = MonteCarlo.payoff(ST, K, option_type)
+        ST = MonteCarlo.terminal_price_simulation(n=n, S0=S0, T=T, rf=rf, sigma=sigma, method=method, seed=seed,)
+        payoffs = Util.payoff(ST, K, option_type)
         discounted_payoffs = np.exp(-rf * T) * payoffs
         price = float(np.mean(discounted_payoffs))
-        stderr = Stats.standard_error(discounted_payoffs)
-        ci = Stats.ci_normal(price, stderr, level=confidence_level)
-
+        stderr = Util.standard_error(discounted_payoffs)
+        ci = Util.ci_normal(price, stderr, level=confidence_level)
         return price, ci
