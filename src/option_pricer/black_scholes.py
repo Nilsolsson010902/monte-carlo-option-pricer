@@ -1,7 +1,4 @@
 import math as math
-from datetime import date
-import numpy as np
-from mc_pricer.mc import MonteCarlo
 class BlackScholes:
 
     
@@ -72,22 +69,15 @@ class BlackScholes:
 
     @staticmethod
     def delta(S0: float,
-              K: float,
-              T: float,
-              r: float,
-              sigma: float,
-              option_type: str
-              )-> float:
+                K: float,
+                T: float,
+                r: float,
+                sigma: float,
+                option_type: str
+                )-> float:
         """ 
         Delta greek for european call option.
         Measures relationship between options price and underlying stock. 
-        Parameters:
-        S0: spot price. 
-        K: strike price.
-        T: time to maturity in years. 
-        r: continuously compounded risk-free rate. 
-        sigma: volatility (e.g. 0.2). 
-        option_type: "call" or "put".
         """
 
         if T <= 0:
@@ -106,7 +96,8 @@ class BlackScholes:
             return BlackScholes.norm_cdf(d1) - 1.0
         else:
             raise ValueError("No such option type")
-        
+
+    @staticmethod 
     def vega(S0: float,
               K: float,
               T: float,
@@ -116,12 +107,6 @@ class BlackScholes:
         """ 
         Vega greek for european call option.
         Measures the option's price sensitivity to changes in the underlying asset's implied volatility
-        Parameters:
-        S0: spot price. 
-        K: strike price.
-        T: time to maturity in years. 
-        r: continuously compounded risk-free rate. 
-        sigma: volatility (e.g. 0.2). 
         """
         if T <= 0:
             return 0.0
@@ -129,6 +114,8 @@ class BlackScholes:
         d1 = BlackScholes.d1(S0, K, T, r, sigma)
         return S0 * BlackScholes.norm_pdf(d1) * math.sqrt(T)
 
+
+    @staticmethod
     def gamma(S0: float,
               K: float,
               T: float,
@@ -138,12 +125,6 @@ class BlackScholes:
         """ 
         Gamma greek for european call option.
         Gamma measures the sensitivity of the option's delta.
-        Parameters:
-        S0: spot price. 
-        K: strike price.
-        T: time to maturity in years. 
-        r: continuously compounded risk-free rate. 
-        sigma: volatility (e.g. 0.2). 
         """
         if T <= 0:
             return 0.0

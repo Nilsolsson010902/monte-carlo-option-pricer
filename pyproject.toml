@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mc-pricer"
+name = "option-pricer"
 version = "0.1.0"
-description = "Monte Carlo option pricer with validation against Black–Scholes"
+description = "Option pricing engine with Black-Scholes, Monte Carlo, implied volatility, and binomial pricing"
 authors = [{ name = "Nils Olsson" }]
 requires-python = ">=3.9"
 dependencies = [
@@ -14,4 +14,4 @@ dependencies = [
 ]
 
 [project.scripts]
-mcprice = "mc_pricer.cli:main"
+option-price = "option_pricer.cli:main"

@@ -1,5 +1,4 @@
 import numpy as np
-import math
 import scipy.stats as st
 
 class Util():
@@ -42,3 +41,12 @@ class Util():
         
         else:
             raise Exception("Invalid option type")
+    
+    @staticmethod
+    def check_option_parameters(S0: float, T: float, sigma: float):
+        if S0 <= 0:
+            raise ValueError("S0 must be > 0")
+        if T < 0:
+            raise ValueError("T must be >= 0")
+        if sigma <= 0:
+            raise ValueError("sigma must be > 0")

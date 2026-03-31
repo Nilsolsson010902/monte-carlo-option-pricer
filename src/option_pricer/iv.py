@@ -1,6 +1,5 @@
 import numpy as np
-from mc_pricer.black_scholes import BlackScholes
-
+from option_pricer.black_scholes import BlackScholes
 class ImpliedVol:
 
     @staticmethod
@@ -37,12 +36,10 @@ class ImpliedVol:
             if(abs(price_diff) < goal):
                 return sigma
 
-                        
             # If Vega is too small, Newton step becomes unstable
             if vega < 1e-12:
                 raise ValueError("Vega too small for Newton method")
             
-
             sigma = sigma - (price_diff)/vega
 
             if sigma <= 0: #Keep sigma positive to avoid invalid volatility values
