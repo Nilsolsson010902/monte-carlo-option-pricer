@@ -26,7 +26,7 @@ The purpose of the project is to demonstrate practical derivative pricing, numer
 git clone <repo-url>
 cd monte-carlo-option-pricer
 pip install -e .
-
+```
 
 ## Models
 
@@ -55,7 +55,7 @@ Monte Carlo prices converge toward the Black-Scholes benchmark as the number of 
 ![MC convergence](figures/mc_convergence.png)
 
 ### 3. Absolute pricing error
-The absolute pricing error decreases as the number of Monte Carlo paths increases.
+The absolute pricing error decreases as the number of Monte Carlo paths increases until a certain point in which it spikes again.
 ![MC error](figures/mc_error.png)
 
 ### 4. Confidence interval width
@@ -67,12 +67,13 @@ Option prices increase with volatility, as expected.
 ![Vol sensitivity](figures/vol_sensitivity.png)
 
 ### 6. Greeks
-Delta and Gamma behave consistently with Black-Scholes theory.
+Delta and Gamma exhibit the expected behaviour under the Black-Scholes model. 
+Delta transitions smoothly from 0 to 1, while Gamma peaks around the strike price.
 ![Greeks](figures/greeks.png)
 
 ### Binomial pricing model convergence
 The American put price converges as the number of tree steps increases, indicating numerical stability of the binomial model.
-![POBM](figures/bopm_convergence.png)
+![BOPM convergence](figures/bopm_convergence.png)
 
 
 ## Validation
@@ -88,5 +89,5 @@ The project includes tests for:
 
 - Barrier and Asian options
 - control variates
-- C++ acceleration for large-scale simulation
+- C++ implementation for large-scale simulation
 - UI to enable easy use
